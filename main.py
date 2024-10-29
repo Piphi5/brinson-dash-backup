@@ -24,7 +24,7 @@ api_url = 'https://api.aprs.fi/api/get'
 api_key = '203831.U2jPXLFW6m14qJ'
 # name = 'KQ4AOR-11'
 light_aprs_params = {
-    'name': 'KQ4AOR-11',
+    'name': 'KO6DRO-11',
     'what': 'loc',
     'apikey': api_key,
     'format': 'json'
@@ -249,7 +249,7 @@ def display_dash(df):
         # st.progress(altitude / 20000 * 100, text="Percent of max altitude")
         temperature, t_delta = get_metric_delta(df, 'temperature')
         st.metric("Temperature", f"{temperature:.2f} °C", delta=t_delta)
-        speed, s_delta = get_metric_delta(df, 'temperature')
+        speed, s_delta = get_metric_delta(df, 'speed')
         st.metric("Speed", f"{speed:.2f} km/h", delta=s_delta)
         st.metric("Azimuth", f"{pointing_data['azimuth']:.2f} °")
         st.metric("Elevation Angle", f"{pointing_data['elevation']:.2f} °")
@@ -261,12 +261,12 @@ def display_dash(df):
                 rows=2, cols=2,
                 shared_xaxes=False,
                 # vertical_spacing=0.03,
-                subplot_titles=("Voltage (V) over Time", "Altitude (m) over time", "Temperature (°C) over time",  "Pressure (hPa) over Temperature (°C)")
+                subplot_titles=("Voltage (V) over Time", "Altitude (m) over time", "Temperature (°C) over time",  "Altitude (m) over Temperature (°C)")
             )
         voltage_chart = px.line(df, x='time', y='voltage', title="Voltage (V) over Time", color="type", markers=True)
         temp_chart = px.line(df, x='time', y='temperature', title="Temperature (C) over Time", color='type', markers=True)
         alt_chart = px.line(df, x='time', y='altitude', title="Altitude (m) over Time", color='type', markers=True)
-        press_temp_chart = px.line(df, x='temperature', y='pressure', title="Pressure over Temperature", color='type', markers=True)
+        press_temp_chart = px.line(df, x='temperature', y='altitude', title="Altitude (m) over Temperature (°C)", color='type', markers=True)
 
         for trace in voltage_chart['data']:
             fig.add_trace(trace.update(showlegend=False), row=1, col=1)
@@ -325,9 +325,6 @@ try:
     light_aprs_data = fetch_data_refresh(light_aprs_params)
     if light_aprs_data:
         process_light_aprs(light_aprs_data)
-    eagle_aprs_data = fetch_data_refresh(eagle_aprs_params)
-    if process_eagle_aprs:
-        process_eagle_aprs(eagle_aprs_data)
     df = pd.DataFrame(st.session_state.data).drop_duplicates()
     if os.path.isfile(filename):
         old_df = pd.read_csv(filename)
@@ -340,16 +337,11 @@ try:
     new_df['ts'] = pd.to_datetime(new_df['time'])
     new_df = new_df.sort_values("ts")
 
-    historical = st.checkbox("Use Historical")
-    if historical:
-        filtered_df = total_temp_filter(new_df)
+    filtered_df = temp_filter(new_df)
+    if not filtered_df.empty:
         display_dash(filtered_df)
     else:
-        filtered_df = temp_filter(new_df)
-        if not filtered_df.empty:
-            display_dash(filtered_df)
-        else:
-            st.text("No current data found. Try using historical.")
+        st.text("No current data found. Try using historical.")
 except Exception as e:
     print(e)
 
