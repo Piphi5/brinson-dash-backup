@@ -21,7 +21,7 @@ balloon_track = AltAzimuthRange()
 
 # Set API parameters
 api_url = 'https://api.aprs.fi/api/get'
-api_key = '203831.U2jPXLFW6m14qJ'
+api_key = '205173.2LyErtHaesLrWrd'
 # name = 'KQ4AOR-11'
 light_aprs_params = {
     'name': 'KO6DRO-11',
@@ -337,13 +337,15 @@ try:
     new_df['ts'] = pd.to_datetime(new_df['time'])
     new_df = new_df.sort_values("ts")
 
-    filtered_df = temp_filter(new_df)
-    if not filtered_df.empty:
-        display_dash(filtered_df)
+    # filtered_df = temp_filter(new_df)
+    if not new_df.empty:
+        display_dash(new_df)
     else:
         st.text("No current data found. Try using historical.")
 except Exception as e:
     print(e)
+    import traceback
+    traceback.print_exc()
 
 print(st.session_state.wait_time)
 time.sleep(st.session_state.wait_time)
